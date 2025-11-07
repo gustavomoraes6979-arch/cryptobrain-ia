@@ -1,0 +1,9 @@
+# Ignorar dependências
+node_modules/
+
+# Ignorar variáveis secretas
+.env
+
+# Ignorar cache e outros
+.DS_Store
+npm-debug.log
