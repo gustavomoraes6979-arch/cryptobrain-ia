@@ -23,7 +23,7 @@ function saveLocalHistory() {
 }
 
 function formatTime() {
-  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
 }
 
 function scrollToBottom() {
@@ -40,7 +40,7 @@ function addUserBubble(text, time = null, persist = true) {
   if (!time) time = formatTime();
 
   if (persist) {
-    history.push({ role: 'user', text, time });
+    history.push({ role:'user', text, time });
     saveLocalHistory();
   }
   scrollToBottom();
@@ -59,9 +59,8 @@ function addBotBubble(text, persist = true, time = null) {
   messagesEl.appendChild(row);
 
   if (!time) time = formatTime();
-
   if (persist) {
-    history.push({ role: 'bot', text, time });
+    history.push({ role:'bot', text, time });
     saveLocalHistory();
   }
   scrollToBottom();
@@ -76,8 +75,8 @@ function showTyping() {
   return row;
 }
 
-/* ✅ ROTA CORRETA (funciona local + produção) */
-const API_URL = "/chat";
+/* ✅ ROTA CORRETA (local + produção) */
+const API_URL = "/api/chat";
 
 /* ====== Send ====== */
 sendBtn?.addEventListener('click', onSend);
@@ -96,9 +95,9 @@ async function onSend() {
 
   try {
     const resp = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: text, sessionId })
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ question:text, sessionId })
     });
 
     const data = await resp.json();
@@ -111,7 +110,7 @@ async function onSend() {
       addBotBubble("⚠️ Resposta inválida do servidor.");
     }
 
-  } catch (err) {
+  } catch(err) {
     typingNode.remove();
     console.error(err);
     addBotBubble("❌ Erro de conexão");
