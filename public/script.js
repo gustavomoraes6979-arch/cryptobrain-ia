@@ -3,95 +3,113 @@ const inputEl = document.getElementById('input');
 const messagesEl = document.getElementById('messages');
 const sendBtn = document.getElementById('send');
 
-let sessionId = localStorage.getItem('cb_sessionId') || null;
+let sessionId = localStorage.getItem('cb_sessionId');
 if (!sessionId) {
   sessionId = 's_' + Math.random().toString(36).slice(2, 9);
   localStorage.setItem('cb_sessionId', sessionId);
 }
 
-let history = JSON.parse(localStorage.getItem('cb_history_' + sessionId) || '[]');
+let history = [];
+try {
+  history = JSON.parse(localStorage.getItem('cb_history_' + sessionId) || '[]');
+} catch {
+  history = [];
+}
 
-function saveLocalHistory(){
+function saveLocalHistory() {
   localStorage.setItem('cb_history_' + sessionId, JSON.stringify(history));
 }
-function formatTime(){
+function formatTime() {
   return new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
 }
-function scrollToBottom(){
+function scrollToBottom() {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
 /* ====== Render ====== */
-function addUserBubble(text, time=null, persist=true){
+function addUserBubble(text, time=null, persist=true) {
   const row = document.createElement('div');
-  row.className='message user-message';
+  row.className = 'message user-message';
   row.textContent = text;
   messagesEl.appendChild(row);
-  if(!time) time = formatTime();
-  if(persist){
-    history.push({role:'user', text, time});
+
+  if (!time) time = formatTime();
+
+  if (persist) {
+    history.push({ role:'user', text, time });
     saveLocalHistory();
   }
   scrollToBottom();
 }
 
-function addBotBubble(text, persist=true, time=null){
+function addBotBubble(text, persist=true, time=null) {
   const row = document.createElement('div');
-  row.className='message bot-message';
-  row.innerHTML = marked.parse(text);
+  row.className = 'message bot-message';
+
+  try {
+    row.innerHTML = marked.parse(text);
+  } catch {
+    row.textContent = text;
+  }
+
   messagesEl.appendChild(row);
-  if(!time) time = formatTime();
-  if(persist){
-    history.push({role:'bot', text, time});
+
+  if (!time) time = formatTime();
+
+  if (persist) {
+    history.push({ role:'bot', text, time });
     saveLocalHistory();
   }
   scrollToBottom();
 }
 
-function showTyping(){
+function showTyping() {
   const row = document.createElement('div');
-  row.className='message bot-message typing';
+  row.className = 'message bot-message typing';
   row.textContent = 'Digitando...';
   messagesEl.appendChild(row);
   scrollToBottom();
   return row;
 }
 
+/* ✅ AUTO-Rota (local & produção) */
+const API_URL = window.location.hostname.includes("localhost")
+  ? "http://localhost:3000/api/chat"
+  : "https://cryptobrain-ia.onrender.com/api/chat";
+
 /* ====== Send ====== */
-sendBtn.addEventListener('click', onSend);
-inputEl.addEventListener('keypress',(e)=>{
-  if(e.key==='Enter') onSend();
+sendBtn?.addEventListener('click', onSend);
+inputEl?.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') onSend();
 });
 
-async function onSend(){
+async function onSend() {
   const text = inputEl.value.trim();
-  if(!text) return;
+  if (!text) return;
+
   addUserBubble(text);
   inputEl.value = '';
 
   const typingNode = showTyping();
 
   try {
-    const resp = await fetch('/chat', {
+    const resp = await fetch(API_URL, {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ question:text, sessionId })
     });
 
-    const raw = await resp.text();
-    let data = null;
-    try { data = JSON.parse(raw); } catch(e) {}
-
+    const data = await resp.json();
     typingNode.remove();
 
     const answer = data?.response;
-    if(answer){
+    if (answer) {
       addBotBubble(answer);
     } else {
       addBotBubble("⚠️ Resposta inválida do servidor.");
     }
 
-  } catch(err){
+  } catch(err) {
     typingNode.remove();
     console.error(err);
     addBotBubble("❌ Erro de conexão");
@@ -99,11 +117,14 @@ async function onSend(){
 }
 
 /* ====== Init ====== */
-if(history.length===0){
-  addBotBubble("👋 Olá! Eu sou a CryptoBrain IA. Pergunte: **quais moedas estão subindo?**");
+if (history.length === 0) {
+  addBotBubble(
+    "👋 Olá! Eu sou a CryptoBrain IA. Pergunte: **quais moedas estão subindo?**",
+    true
+  );
 } else {
-  history.forEach(m=>{
-    if(m.role==='user') addUserBubble(m.text, m.time, false);
+  history.forEach(m => {
+    if (m.role === 'user') addUserBubble(m.text, m.time, false);
     else addBotBubble(m.text, false, m.time);
   });
 }
