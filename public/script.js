@@ -3,12 +3,14 @@ const inputEl = document.getElementById('input');
 const messagesEl = document.getElementById('messages');
 const sendBtn = document.getElementById('send');
 
+/* ✅ Session */
 let sessionId = localStorage.getItem('cb_sessionId');
 if (!sessionId) {
   sessionId = 's_' + Math.random().toString(36).slice(2, 9);
   localStorage.setItem('cb_sessionId', sessionId);
 }
 
+/* ✅ Histórico */
 let history = [];
 try {
   history = JSON.parse(localStorage.getItem('cb_history_' + sessionId) || '[]');
@@ -19,15 +21,17 @@ try {
 function saveLocalHistory() {
   localStorage.setItem('cb_history_' + sessionId, JSON.stringify(history));
 }
+
 function formatTime() {
-  return new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
+
 function scrollToBottom() {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
 /* ====== Render ====== */
-function addUserBubble(text, time=null, persist=true) {
+function addUserBubble(text, time = null, persist = true) {
   const row = document.createElement('div');
   row.className = 'message user-message';
   row.textContent = text;
@@ -36,13 +40,13 @@ function addUserBubble(text, time=null, persist=true) {
   if (!time) time = formatTime();
 
   if (persist) {
-    history.push({ role:'user', text, time });
+    history.push({ role: 'user', text, time });
     saveLocalHistory();
   }
   scrollToBottom();
 }
 
-function addBotBubble(text, persist=true, time=null) {
+function addBotBubble(text, persist = true, time = null) {
   const row = document.createElement('div');
   row.className = 'message bot-message';
 
@@ -57,7 +61,7 @@ function addBotBubble(text, persist=true, time=null) {
   if (!time) time = formatTime();
 
   if (persist) {
-    history.push({ role:'bot', text, time });
+    history.push({ role: 'bot', text, time });
     saveLocalHistory();
   }
   scrollToBottom();
@@ -72,10 +76,8 @@ function showTyping() {
   return row;
 }
 
-/* ✅ AUTO-Rota (local & produção) */
-const API_URL = window.location.hostname.includes("localhost")
-  ? "http://localhost:3000/api/chat"
-  : "https://cryptobrain-ia.onrender.com/api/chat";
+/* ✅ ROTA CORRETA (funciona local + produção) */
+const API_URL = "/chat";
 
 /* ====== Send ====== */
 sendBtn?.addEventListener('click', onSend);
@@ -94,9 +96,9 @@ async function onSend() {
 
   try {
     const resp = await fetch(API_URL, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ question:text, sessionId })
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: text, sessionId })
     });
 
     const data = await resp.json();
@@ -109,7 +111,7 @@ async function onSend() {
       addBotBubble("⚠️ Resposta inválida do servidor.");
     }
 
-  } catch(err) {
+  } catch (err) {
     typingNode.remove();
     console.error(err);
     addBotBubble("❌ Erro de conexão");
