@@ -9,15 +9,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
-    "groq-sdk": "^0.34.0",
-    "openai": "^6.8.0",
-    "path": "^0.12.7"
+    "groq-sdk": "^0.34.0"
   },
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "description": ""
+    "start": "node index.js"
+  }
 }
